@@ -1,0 +1,9 @@
+node_modules
+.next
+.env
+.env.*      # Important!
+.git
+.vscode
+*.log
+Dockerfile
+docker-compose.yml
