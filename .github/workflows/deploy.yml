@@ -27,6 +27,13 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
+
+      - name: 🧪 Debug AWS Credentials
+        run: |
+          echo "Verifying AWS identity and S3 access..."
+          aws sts get-caller-identity
+          aws s3 ls
+
       - name: Get ECR repository URI
         id: ecr
         run: |
