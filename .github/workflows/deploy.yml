@@ -27,12 +27,6 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: 🧪 Debug AWS Credentials
-        run: |
-          echo "Verifying AWS identity and S3 access..."
-          aws sts get-caller-identity
-          aws s3 ls
-
       - name: Get ECR repository URI
         id: ecr
         run: |
@@ -44,19 +38,7 @@ jobs:
 
       - name: Build, tag, and push Docker image
         run: |
-          docker build \
-            --build-arg AUTH0_SECRET=${{ secrets.AUTH0_SECRET }} \
-            --build-arg APP_BASE_URL=${{ secrets.APP_BASE_URL }} \
-            --build-arg AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
-            --build-arg AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
-            --build-arg AUTH0_CLIENT_SECRET=${{ secrets.AUTH0_CLIENT_SECRET }} \
-            --build-arg MONGODB_URI=${{ secrets.MONGODB_URI }} \
-            --build-arg AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-            --build-arg AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-            --build-arg AWS_REGION=${{ secrets.AWS_REGION }} \
-            --build-arg AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }} \
-            --build-arg issuerBaseUrl=${{ secrets.issuerBaseUrl }} \
-            -t $REPO_URI:$IMAGE_TAG .
+          docker build -t $REPO_URI:$IMAGE_TAG .
 
           docker push $REPO_URI:$IMAGE_TAG
 
