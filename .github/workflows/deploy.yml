@@ -27,7 +27,6 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-
       - name: 🧪 Debug AWS Credentials
         run: |
           echo "Verifying AWS identity and S3 access..."
@@ -43,7 +42,7 @@ jobs:
             --output text)
           echo "REPO_URI=$URI" >> $GITHUB_ENV
 
-      - name: Build, tag and push Docker image
+      - name: Build, tag, and push Docker image
         run: |
           docker build \
             --build-arg AUTH0_SECRET=${{ secrets.AUTH0_SECRET }} \
@@ -58,10 +57,8 @@ jobs:
             --build-arg AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }} \
             --build-arg issuerBaseUrl=${{ secrets.issuerBaseUrl }} \
             -t $REPO_URI:$IMAGE_TAG .
-          
+
           docker push $REPO_URI:$IMAGE_TAG
-
-
 
       - name: Prepare new ECS task definition
         id: task-def
