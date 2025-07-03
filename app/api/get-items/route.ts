@@ -2,7 +2,10 @@ import { connectToDatabase } from "../../../lib/mongodb";
 
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url);
+    // 🛡️ Guard against undefined `req.url` (build-time safety)
+    const fullUrl = typeof req?.url === "string" ? req.url : "http://localhost";
+    const url = new URL(fullUrl);
+
     const page = parseInt(url.searchParams.get("page") || "1");
     const limit = parseInt(url.searchParams.get("limit") || "10");
     const search = url.searchParams.get("search") || "";
@@ -12,18 +15,10 @@ export async function GET(req: Request) {
     const skip = (page - 1) * limit;
     const { db } = await connectToDatabase();
 
-    // Build filter
     const filter: any = {};
+    if (search) filter.title = { $regex: search, $options: "i" };
+    if (category) filter.category = category;
 
-    if (search) {
-      filter.title = { $regex: search, $options: "i" };
-    }
-
-    if (category) {
-      filter.category = category;
-    }
-
-    // Sorting logic
     let sortOption: any = { createdAt: -1 };
     if (sort === "price_asc") sortOption = { price: 1 };
     else if (sort === "price_desc") sortOption = { price: -1 };
