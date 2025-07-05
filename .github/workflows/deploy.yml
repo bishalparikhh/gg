@@ -49,7 +49,7 @@ jobs:
             --build-arg AWS_SECRET_ACCESS_KEY=fake-aws-secret \
             --build-arg AWS_REGION=ap-south-1 \
             --build-arg AWS_S3_BUCKET_NAME=dummy-bucket \
-            -t fake-repo-uri/fake-image:fake-tag .
+            -t $REPO_URI:$IMAGE_TAG .
 
 
       - name: Push image to ECR
