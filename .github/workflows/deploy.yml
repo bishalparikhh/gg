@@ -36,20 +36,21 @@ jobs:
             --output text)
           echo "REPO_URI=$URI" >> $GITHUB_ENV
 
-      - name: Build Docker image
+      - name: Build Docker image (test with dummy secrets)
         run: |
           docker build --no-cache \
-            --build-arg AUTH0_SECRET=${{ secrets.AUTH0_SECRET }} \
-            --build-arg APP_BASE_URL=${{ secrets.APP_BASE_URL }} \
-            --build-arg AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }} \
-            --build-arg AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }} \
-            --build-arg AUTH0_CLIENT_SECRET=${{ secrets.AUTH0_CLIENT_SECRET }} \
-            --build-arg MONGODB_URI=${{ secrets.MONGODB_URI }} \
-            --build-arg AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-            --build-arg AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-            --build-arg AWS_REGION=${{ secrets.AWS_REGION }} \
-            --build-arg AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }} \
-            -t $REPO_URI:$IMAGE_TAG .
+            --build-arg AUTH0_SECRET=fake-secret \
+            --build-arg APP_BASE_URL=http://localhost:3000 \
+            --build-arg AUTH0_DOMAIN=fake.auth0.com \
+            --build-arg AUTH0_CLIENT_ID=fake-client-id \
+            --build-arg AUTH0_CLIENT_SECRET=fake-client-secret \
+            --build-arg MONGODB_URI=mongodb://localhost:27017 \
+            --build-arg AWS_ACCESS_KEY_ID=fake-aws-key \
+            --build-arg AWS_SECRET_ACCESS_KEY=fake-aws-secret \
+            --build-arg AWS_REGION=ap-south-1 \
+            --build-arg AWS_S3_BUCKET_NAME=dummy-bucket \
+            -t fake-repo-uri/fake-image:fake-tag .
+
 
       - name: Push image to ECR
         run: |
