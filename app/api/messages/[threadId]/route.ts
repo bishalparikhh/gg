@@ -3,16 +3,13 @@ import dbConnect from "../../../../lib/dbConnect";
 import Message from "../../../../models/Message";
 import Thread from "../../../../models/Thread";
 
-// ✅ GET /api/messages/[threadId] → return both thread info + messages
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { threadId: string } }
-) {
+// ✅ GET /api/messages/[threadId] → fetch thread + messages
+export async function GET(req: NextRequest, context: any) {
   await dbConnect();
 
-  const { threadId } = params; // ✅ no await
-  const thread = await Thread.findById(threadId).lean();
+  const { threadId } = context.params as { threadId: string };
 
+  const thread = await Thread.findById(threadId).lean();
   if (!thread) {
     return NextResponse.json({ thread: null, messages: [] }, { status: 404 });
   }
@@ -33,19 +30,18 @@ export async function GET(
   });
 }
 
-
 // ✅ POST /api/messages/[threadId] → send a new message
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { threadId: string } }
-) {
+export async function POST(req: NextRequest, context: any) {
   await dbConnect();
 
-  const { threadId } = params;
+  const { threadId } = context.params as { threadId: string };
   const { senderId, text } = await req.json();
 
   if (!senderId || !text) {
-    return NextResponse.json({ error: "Missing senderId or text" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing senderId or text" },
+      { status: 400 }
+    );
   }
 
   const msg = await Message.create({ threadId, senderId, text });
@@ -57,14 +53,11 @@ export async function POST(
 }
 
 // ✅ DELETE /api/messages/[threadId] → delete thread + messages
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { threadId: string } }
-) {
+export async function DELETE(req: NextRequest, context: any) {
   try {
     await dbConnect();
 
-    const { threadId } = params;
+    const { threadId } = context.params as { threadId: string };
 
     // ✅ Delete all messages for this thread
     await Message.deleteMany({ threadId });
