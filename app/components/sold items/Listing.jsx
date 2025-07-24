@@ -8,8 +8,11 @@ export default function Listing() {
   const [loadingItems, setLoadingItems] = useState(true);
 
   const fetchUserItems = async () => {
+    if (!user?.sub) return; // ✅ wait for user
+    const sellerId = user.sub;
+
     try {
-      const res = await fetch(`/api/user-items?userId=${user.sub}&page=1&limit=10`);
+      const res = await fetch(`/api/user-items?sellerId=${sellerId}&page=1&limit=10`);
       const data = await res.json();
       setItems(data.items || []);
     } catch (err) {
@@ -41,8 +44,7 @@ export default function Listing() {
   };
 
   useEffect(() => {
-    if (!user) return;
-    fetchUserItems();
+    if (user) fetchUserItems(); // ✅ fetch only after user is ready
   }, [user]);
 
   if (isLoading || loadingItems) return <p className="text-center">Loading your items...</p>;
@@ -55,7 +57,6 @@ export default function Listing() {
         <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-6">
           {items.map((item) => (
             <div key={item.id} className="bg-white shadow p-4 rounded-lg relative">
-             
               <img
                 src={item.image}
                 alt={item.title}
@@ -65,19 +66,19 @@ export default function Listing() {
               <p className="text-sm text-gray-600">{item.description}</p>
               <p className="text-blue-600 font-bold mt-1">₹{item.price}</p>
               <div className="mt-4 flex justify-between">
-  <button
-    onClick={() => openEditModal(item)}
-    className="text-sm px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
-  >
-    Edit
-  </button>
-  <button
-    onClick={() => handleDelete(item.id)}
-    className="text-sm px-3 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 transition"
-  >
-    Delete
-  </button>
-</div>
+                <button
+                  onClick={() => openEditModal(item)}
+                  className="text-sm px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(item.id)}
+                  className="text-sm px-3 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 transition"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>

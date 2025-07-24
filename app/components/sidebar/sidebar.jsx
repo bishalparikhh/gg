@@ -3,67 +3,104 @@ import { useUser } from "@auth0/nextjs-auth0";
 import { useState } from "react";
 import Link from "next/link";
 
-// Import the components correctly (assuming they are default exports)
-import UserInfo from "../userinfo/UserInfo";  // Default import
-import Listing from "../sold items/Listing";  // Default import
+// Components
+import UserInfo from "../userinfo/UserInfo";
+import Listing from "../sold items/Listing";
+
+// Icons
+import {
+  FiUser,
+  FiList,
+  FiPlusSquare,
+  FiHeart,
+  FiShoppingCart,
+  FiSettings,
+  FiLogOut,
+} from "react-icons/fi";
 
 export default function Sidebar() {
   const { user, isLoading } = useUser();
-  // Initialize the state with a string value representing the selected option (not the component itself)
-  const [selectedOption, setSelectedOption] = useState('userinfo'); // Default to 'userinfo'
+  const [selectedOption, setSelectedOption] = useState("userinfo");
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  if (isLoading) return <div className="text-center p-10">Loading...</div>;
 
-  // Handle option click to set selected option
-  const handleOptionClick = (option) => {
-    setSelectedOption(option);
-  };
+  const handleOptionClick = (option) => setSelectedOption(option);
 
-  // Function to render main content based on selected option
   const renderMainContent = () => {
     switch (selectedOption) {
-      case 'userinfo':
+      case "userinfo":
         return <UserInfo />;
-      case 'listing':
+      case "listing":
         return <Listing />;
       default:
-        return <UserInfo />; // Default content if no match
+        return <UserInfo />;
     }
   };
 
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <div className="sticky top-0 left-0 h-screen w-70 bg-cyan-500 p-5">
-        <h1 className="text-center text-white text-2xl pt-5 font-sans">
-          Welcome , {user.nickname}
-        </h1>
+      <aside className="w-60 bg-white border-r border-gray-200 flex flex-col items-center py-6">
+        {/* Logo */}
+        <img
+          src="/logo.png"
+          alt="Logo"
+          className="w-14 h-14 rounded-full mb-4"
+        />
 
-        {/* Profile Image */}
-        <div className="flex justify-center items-center">
-          <img src="/logo.png" height={200} alt="profile picture" width={200} />
+        {/* Welcome */}
+        <div className="text-2xl text-gray-700 mb-8 text-center">
+          Hello, <span className="font-medium text-2xl">{user.nickname}</span>
         </div>
 
-        {/* Sidebar Links */}
-        <div className="pt-6 w-full flex justify-center items-center text-center shadow-cyan-700 text-2xl rounded-2xl shadow-2xl text-white pb-5">
-          <a href="#" onClick={() => handleOptionClick('userinfo')}>User Info</a>
-        </div>
-
-        <div className="pt-6 w-full text-center shadow-cyan-700 text-2xl shadow-2xl rounded-2xl text-white pb-5">
-          <a href="#" onClick={() => handleOptionClick('listing')}>Listing</a>
-        </div>
-
-        <div className="pt-6 w-full text-center shadow-cyan-700 text-2xl rounded-2xl shadow-2xl text-white pb-5">
-          <Link href="/">Home</Link>
-        </div>
-      </div>
+        {/* Navigation */}
+        <nav className="flex flex-col space-y-2 w-full px-4 text-sm text-gray-600">
+          <SidebarButton
+            icon={<FiUser />}
+            label="User Info"
+            value="userinfo"
+            selected={selectedOption}
+            onClick={handleOptionClick}
+          />
+          <SidebarButton
+            icon={<FiList />}
+            label="My Listings"
+            value="listing"
+            selected={selectedOption}
+            onClick={handleOptionClick}
+          />
+          {/* Logout Link */}
+          <Link
+            href="/auth/logout"
+            className="flex items-center gap-2 px-3 py-2 rounded-md text-red-500 hover:bg-red-50 transition"
+          >
+            <FiLogOut className="text-base" />
+            Logout
+          </Link>
+        </nav>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-6 border">
-        {renderMainContent()} {/* Dynamically render content based on selectedOption */}
-      </div>
+      <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+        {renderMainContent()}
+      </main>
     </div>
+  );
+}
+
+// Sidebar Button Reusable
+function SidebarButton({ icon, label, value, selected, onClick }) {
+  return (
+    <button
+      onClick={() => onClick(value)}
+      className={`flex items-center gap-2 px-3 py-2 rounded-md transition ${
+        selected === value
+          ? "bg-gray-100 text-black font-medium"
+          : "hover:bg-gray-100"
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
   );
 }

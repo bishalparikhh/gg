@@ -1,4 +1,6 @@
 "use client";
+
+import { useUser } from "@auth0/nextjs-auth0";
 import { useState, useEffect } from "react";
 
 export default function Buy() {
@@ -13,8 +15,14 @@ export default function Buy() {
   const [totalPages, setTotalPages] = useState(1);
   const [category, setCategory] = useState("");
 
+  const { user, isLoading: userLoading } = useUser(); // ✅ Logged-in user
   const itemsPerPage = 9;
   const categories = ["merch", "used", "account"];
+  // ✅ Fetch items
+
+  useEffect(() => {
+  console.log("Fetched items:", items);
+}, [items]);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -40,7 +48,8 @@ export default function Buy() {
         } else {
           setError("Failed to fetch items.");
         }
-      } catch {
+      } catch (err) {
+        console.error(err);
         setError("Error fetching items.");
       } finally {
         setLoading(false);
@@ -54,13 +63,58 @@ export default function Buy() {
     setCurrentPage(page);
   };
 
+const startChat = async (item) => {
+  if (!user) {
+    alert("Please log in to message the seller.");
+    return;
+  }
+
+  if (user.sub === item.sellerId) {
+    alert("This is your own listing.");
+    return;
+  }
+
+  if (!item.sellerId) {
+    alert("Seller information missing. Cannot start chat.");
+    return;
+  } 
+  console.log("➡️ DEBUG START CHAT:", {
+    itemId: item.id,
+    itemImage: item.image,
+    itemTitle: item.title,
+    buyerId: user.sub,
+    sellerId: item.sellerId
+  });
+
+  const res = await fetch("/api/messages/new", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      itemId: item.id,       // ✅ correct now
+      itemImage: item.image, // ✅ correct now
+      itemTitle: item.title,
+      buyerId: user.sub,
+      sellerId: item.sellerId,
+    }),
+  });
+
+  const data = await res.json();
+  console.log("➡️ RESPONSE:", data);
+
+  if (res.ok && data.threadId) {
+    window.location.href = `/page/messages/${data.threadId}`;
+  } else {
+    alert(data.message || "Unable to start chat");
+  }
+};
+
+
   return (
     <div className="w-full min-h-screen p-4 md:p-8">
-
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
         <aside className="w-full md:w-1/4 space-y-6">
-          {/* Category */}
+          {/* Category Filter */}
           <div>
             <h2 className="text-lg font-semibold mb-2">Category</h2>
             <button
@@ -90,7 +144,7 @@ export default function Buy() {
             ))}
           </div>
 
-          {/* Filters */}
+          {/* Search Filter */}
           <div className="space-y-4">
             <input
               type="text"
@@ -111,51 +165,47 @@ export default function Buy() {
           {error && <p className="text-center text-red-500">{error}</p>}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="card bg-base-100 border border-base-300 shadow-md"
-              >
-                <figure className="h-40 w-full overflow-hidden">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                  />
-                </figure>
-                <div className="card-body p-4">
-                  <h2 className="card-title text-base">{item.title}</h2>
-                  <p className="text-sm text-gray-500 line-clamp-2">
-                    {item.description}
-                  </p>
-                  <div className="flex justify-between items-center mt-3">
-                    <span className="text-green-600 font-semibold text-sm">
-                      ₹ {item.price}
-                    </span>
-                    <button
-                      onClick={async () => {
-                        const res = await fetch("/api/messages", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            sellerId: item.user?.sub || item.sellerId,
-                          }),
-                        });
-                        const data = await res.json();
-                        if (res.ok && data.threadId) {
-                          window.location.href = `/messages/${data.threadId}`;
-                        } else {
-                          alert("Unable to start chat");
-                        }
-                      }}
-                      className="btn btn-sm btn-outline"
-                    >
-                      Message
-                    </button>
+            {items.map((item) => {
+              const isOwner = user?.sub === item.sellerId;
+
+              return (
+                <div
+                  key={item.id}
+                  className="card bg-base-100 border border-base-300 shadow-md"
+                >
+                  <figure className="h-40 w-full overflow-hidden">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </figure>
+                  <div className="card-body p-4">
+                    <h2 className="card-title text-base">{item.title}</h2>
+                    <p className="text-sm text-gray-500 line-clamp-2">
+                      {item.description}
+                    </p>
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-green-600 font-semibold text-sm">
+                        ₹ {item.price}
+                      </span>
+
+                      {/* ✅ Show "Your Listing" if it's your own item */}
+                      {isOwner ? (
+                        <span className="text-xs text-gray-400">Your Listing</span>
+                      ) : (
+                        <button
+                          onClick={() => startChat(item)}
+                          className="btn btn-sm btn-outline"
+                        >
+                          Message
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Pagination */}

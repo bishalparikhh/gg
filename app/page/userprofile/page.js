@@ -3,6 +3,7 @@ import { useUser } from "@auth0/nextjs-auth0"
 
 export default function Profile() {
   const { user, isLoading } = useUser();
+
   return (
     <>
       {isLoading && <p>Loading...</p>}

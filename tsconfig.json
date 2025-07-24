@@ -28,7 +28,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "lib/dbConnect.js", "models/Item.js"  ],
   "exclude": [
     "node_modules"
   ]

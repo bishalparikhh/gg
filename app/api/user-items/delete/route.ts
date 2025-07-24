@@ -1,33 +1,57 @@
-// app/api/user-items/delete/route.ts
-
-import { NextRequest, NextResponse } from 'next/server';
-import { ObjectId, MongoClient } from 'mongodb';
-
-const uri = process.env.MONGODB_URI!;
-const dbName = "valo";
+import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
+import dbConnect from "../../../../lib/dbConnect";
+import Item from "../../../../models/Item";
+import { auth0 } from "../../../../lib/auth0"; // ✅ Auth0 session checker
 
 export async function DELETE(req: NextRequest) {
-  const url = new URL(req.url);
-  const id = url.searchParams.get("id");
-
-  if (!id) {
-    return NextResponse.json({ message: "Missing item ID" }, { status: 400 });
-  }
-
   try {
-    const client = new MongoClient(uri);
-    await client.connect();
-    const db = client.db(dbName);
-    const result = await db.collection("items").deleteOne({ _id: new ObjectId(id) });
-    await client.close();
+    // ✅ 1. Check Auth0 session
+    const session = await auth0.getSession();
 
-    if (result.deletedCount === 1) {
-      return NextResponse.json({ success: true });
-    } else {
-      return NextResponse.json({ success: false, message: "Item not found" }, { status: 404 });
+    if (!session || !session.user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
-  } catch (error) {
-    console.error("Error deleting item:", error);
+
+    const userId = session.user.sub; // ✅ Authenticated user's ID
+
+    // ✅ 2. Extract & validate item ID
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { message: "Invalid or missing item ID" },
+        { status: 400 }
+      );
+    }
+
+    // ✅ 3. Ensure DB connection is established
+    await dbConnect();
+
+    // ✅ 4. Find item & ensure ownership
+    const item = await Item.findById(id);
+
+    if (!item) {
+      return NextResponse.json(
+        { success: false, message: "Item not found" },
+        { status: 404 }
+      );
+    }
+
+    if (item.sellerId !== userId) {
+      return NextResponse.json(
+        { success: false, message: "Forbidden: You do not own this item" },
+        { status: 403 }
+      );
+    }
+
+    // ✅ 5. Delete item
+    await item.deleteOne();
+
+    return NextResponse.json({ success: true, message: "Item deleted successfully" });
+  } catch (error: any) {
+    console.error("❌ Error deleting item:", error.message);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
