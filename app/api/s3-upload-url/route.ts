@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import crypto from 'crypto';
-import { auth0 } from '../../../lib/auth0'; // Make sure this is correctly set up
+import { auth0 } from '../../../lib/auth0';
+
+const REQUIRED_ENV_VARS = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_S3_BUCKET_NAME'];
+
+REQUIRED_ENV_VARS.forEach((key) => {
+  if (!process.env[key]) {
+    console.warn(`⚠️ Missing env var: ${key}`);
+  }
+});
 
 const s3 = new S3Client({
   region: 'us-east-1',
@@ -14,44 +22,60 @@ const s3 = new S3Client({
 
 export async function POST(req: NextRequest) {
   try {
-    // ✅ FIXED: Pass req to getSession
+    console.log('🔐 Getting session...');
     const session = await auth0.getSession(req);
 
     if (!session || !session.user) {
+      console.warn('🚫 Unauthorized: No session or user found');
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { fileType } = await req.json();
+    const body = await req.json();
+    const fileType = body.fileType;
 
-    // ✅ Strict file type check
+    if (!fileType) {
+      console.warn('📄 Missing fileType in request body');
+      return NextResponse.json({ message: 'Missing fileType' }, { status: 400 });
+    }
+
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(fileType)) {
+      console.warn(`❌ Invalid fileType: ${fileType}`);
       return NextResponse.json({ message: 'Invalid file type' }, { status: 400 });
     }
 
-    // ✅ Secure filename and scoped S3 key
     const fileExt = fileType.split('/')[1];
     const fileName = crypto.randomBytes(16).toString('hex') + `.${fileExt}`;
     const key = `uploads/${session.user.sub}/${fileName}`;
 
-    // ✅ Generate signed URL for upload
+    console.log(`📝 Generating signed URL for key: ${key}`);
+
     const command = new PutObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET_NAME!,
       Key: key,
       ContentType: fileType,
-      ACL: 'public-read', // Optional — remove for private uploads
+      ACL: 'public-read',
     });
 
     const uploadURL = await getSignedUrl(s3, command, { expiresIn: 60 });
-
-    // ✅ Construct final image URL
     const imageUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.us-east-1.amazonaws.com/${key}`;
+
+    console.log(`✅ Signed URL generated: ${uploadURL}`);
+    console.log(`🌐 Public image URL: ${imageUrl}`);
 
     return NextResponse.json({ success: true, uploadURL, imageUrl });
   } catch (error: any) {
-    console.error('🔥 S3 Upload Error:', error); // ✅ Full error logging
+    console.error('🔥 S3 Upload Error:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+    });
+
     return NextResponse.json(
-      { message: 'Server error', error: error.message || 'Unknown error' },
+      {
+        message: 'Server error occurred while generating S3 signed URL',
+        error: error.message || 'Unknown error',
+      },
       { status: 500 }
     );
   }
