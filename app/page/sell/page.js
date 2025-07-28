@@ -44,10 +44,14 @@ export default function Sell() {
       const { uploadURL, imageUrl } = await res.json();
 
       await fetch(uploadURL, {
-        method: "PUT",
-        headers: { "Content-Type": image.type },
-        body: image,
-      });
+  method: "PUT",
+  headers: {
+    "Content-Type": image.type,
+    "x-amz-acl": "public-read", // MUST match backend
+  },
+  body: image,
+});
+
 
       const metadataRes = await fetch("/api/sell-item", {
 method: "POST",
