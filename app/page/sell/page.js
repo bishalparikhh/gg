@@ -46,8 +46,7 @@ export default function Sell() {
       await fetch(uploadURL, {
   method: "PUT",
   headers: {
-    "Content-Type": image.type,
-    "x-amz-acl": "public-read", // MUST match backend
+    "Content-Type": image.type// MUST match backend
   },
   body: image,
 });
