@@ -7,7 +7,7 @@ import { auth0 } from "../../../../lib/auth0"; // ✅ Auth0 session checker
 export async function DELETE(req: NextRequest) {
   try {
     // ✅ 1. Check Auth0 session
-    const session = await auth0.getSession();
+    const session = await auth0.getSession(req);
 
     if (!session || !session.user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

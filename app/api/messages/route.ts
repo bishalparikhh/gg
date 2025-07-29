@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     await dbConnect();
 
-    const session = await auth0.getSession();
+    const session = await auth0.getSession(req);
     if (!session || !session.user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }

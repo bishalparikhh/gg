@@ -70,13 +70,6 @@ export default function Sidebar() {
             onClick={handleOptionClick}
           />
           {/* Logout Link */}
-          <Link
-            href="/auth/logout"
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-red-500 hover:bg-red-50 transition"
-          >
-            <FiLogOut className="text-base" />
-            Logout
-          </Link>
         </nav>
       </aside>
 

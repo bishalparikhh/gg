@@ -1,10 +1,10 @@
 // app/api/user-profile/route.ts
-import { NextResponse } from "next/server";
+import { NextResponse,NextRequest } from "next/server";
 import { auth0 } from "../../../lib/auth0";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await auth0.getSession();
+    const session = await auth0.getSession(req);
 
     if (!session || !session.user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

@@ -7,7 +7,7 @@ import { auth0 } from "../../../lib/auth0"; // ✅ using your working auth insta
 export async function POST(req: NextRequest) {
   try {
     // ✅ 1. Get Auth0 Session
-    const session = await auth0.getSession();
+    const session = await auth0.getSession(req);
     
     if (!session || !session.user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
