@@ -8,30 +8,36 @@ export default function UserProfile() {
   const [listingCount, setListingCount] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchProfileAndListings() {
-      try {
-        // ✅ Fetch Auth0 user profile from API
-        const profileRes = await fetch("/api/user-profile");
-        if (!profileRes.ok) throw new Error("Unauthorized");
-        const userData = await profileRes.json();
-        setProfile(userData);
+ useEffect(() => {
+  async function fetchProfileAndListings() {
+    try {
+      // ✅ Fetch Auth0 user profile from API
+      const profileRes = await fetch("/api/user-profile", {
+        credentials: "include",
+      });
+      if (!profileRes.ok) throw new Error("Unauthorized");
+      const userData = await profileRes.json();
+      setProfile(userData);
 
-        // ✅ Fetch listing count AFTER we have user.sub
-        const listingsRes = await fetch(`/api/user-items?userId=${userData.sub}`);
-        if (listingsRes.ok) {
-          const listingsData = await listingsRes.json();
-          setListingCount(listingsData.totalItems);
-        }
-      } catch (err) {
-        console.error("❌ Failed to fetch profile or listings:", err);
-      } finally {
-        setLoading(false);
+      // ✅ Fetch listing count AFTER we have user.sub
+      const listingsRes = await fetch(`/api/user-items?userId=${userData.sub}`, {
+        credentials: "include",
+      });
+      if (listingsRes.ok) {
+        const listingsData = await listingsRes.json();
+        setListingCount(listingsData.totalItems);
+      } else {
+        console.warn("Failed to fetch listings");
       }
+    } catch (err) {
+      console.error("❌ Failed to fetch profile or listings:", err);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    fetchProfileAndListings();
-  }, []);
+  fetchProfileAndListings();
+}, []);
 
   if (loading) {
     return (
