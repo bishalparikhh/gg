@@ -1,6 +1,5 @@
-// app/layout.tsx
-'use client';
 
+'use client';
 import Navbar from './components/navbar/navbar';
 import { Auth0Provider } from '@auth0/nextjs-auth0';
 import './globals.css';

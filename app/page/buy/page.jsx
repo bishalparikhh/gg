@@ -65,7 +65,7 @@ export default function Buy() {
 
 const startChat = async (item) => {
   if (!user) {
-    alert("Please log in to message the seller.");
+    window.location.href = "/auth/login";
     return;
   }
 
