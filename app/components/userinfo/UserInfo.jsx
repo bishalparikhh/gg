@@ -21,7 +21,7 @@ export default function UserProfile() {
           setListingCount(data.totalItems);
         }
       } catch (err) {
-        console.error("Failed to fetch listing count", err);
+        console.error("failed to fetch listing count", err);
       }
     }
 
